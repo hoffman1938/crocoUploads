@@ -12,7 +12,7 @@ with 2025 trends */
   --glass-blur: blur(20px);
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Smooth
 bezier for pleasant feel */
-  --font-size-base: 1rem;
+  --font-size-base: 0.875rem;
   --border-radius: 8px;
 }
 h1 {
@@ -49,6 +49,7 @@ body {
   justify-content: flex-start;
   gap: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  position: relative;
 }
 .navbar a {
   color: white;
@@ -127,10 +128,10 @@ table:hover {
 }
 th,
 td {
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
-  min-width: 120px;
+  min-width: 100px;
   transition: var(--transition);
 }
 th {
@@ -138,14 +139,14 @@ th {
   color: white;
   font-weight: 600;
   letter-spacing: 0.02em;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   position: sticky;
   top: 0;
   z-index: 10;
 }
 .input-row input {
   width: 100%;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
   background-color: var(--card-bg);
@@ -160,13 +161,13 @@ th {
   outline: none;
 }
 button {
-  padding: 0.75rem 1.5rem;
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: var(--border-radius);
   font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
-  min-width: 120px;
+  min-width: 100px;
   position: relative;
   overflow: hidden;
   z-index: 1;
@@ -219,7 +220,7 @@ h2 {
   font-weight: 700;
   margin-bottom: 1.25rem;
   letter-spacing: -0.025em;
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   color: var(--text-color);
 }
 #searchInput,
@@ -227,7 +228,7 @@ h2 {
 #uploadSearchInput {
   width: 100%;
   max-width: 450px;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   margin: 1rem auto;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
@@ -253,21 +254,20 @@ h2 {
   flex-wrap: wrap;
 }
 .dark-mode-toggle {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  background: var(--card-bg);
-  border-radius: 50%;
-  padding: 0.75rem;
+  place-content: center;
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 100%;
+  padding: 0.5rem;
   cursor: pointer;
-  box-shadow: var(--shadow);
   transition: var(--transition);
-  z-index: 1001;
-  backdrop-filter: var(--glass-blur);
+  color: white;
+  flex-shrink: 0;
+  position: sticky;
+  right: 0;
 }
 .dark-mode-toggle:hover {
-  background: var(--accent-color);
-  color: white;
+  background: rgba(255, 255, 255, 0.3);
   transform: scale(1.1);
 }
 body.dark-mode {
@@ -285,11 +285,14 @@ body.dark-mode .input-row input {
   background-color: #1e293b;
   border-color: #334155;
 }
+body.dark-mode .dark-mode-toggle {
+  background: rgba(0, 0, 0, 0.2);
+}
 .progress-table {
   width: 100%;
 }
 .info-text {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   color: var(--secondary-color);
   margin-bottom: 1rem;
   text-align: center;
@@ -297,15 +300,24 @@ body.dark-mode .input-row input {
 }
 .table-wrapper {
   position: relative;
-  overflow: auto;
+  overflow-x: auto;
   max-width: 100%;
   border-radius: var(--border-radius);
   margin-top: 1rem;
   box-shadow: var(--shadow);
 }
 .table-wrapper table {
-  overflow-x: auto;
   white-space: nowrap;
+}
+.table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+.table-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--accent-color);
+  border-radius: 4px;
+}
+.table-wrapper::-webkit-scrollbar-track {
+  background-color: var(--border-color);
 }
 .table-wrapper::before,
 .table-wrapper::after {
@@ -337,7 +349,13 @@ body.dark-mode .input-row input {
 tr:hover {
   background-color: rgba(59, 130, 246, 0.05);
   cursor: pointer;
-} /* Responsive Design: Mobile-first
+}
+.progress-table td:last-child {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+/* Responsive Design: Mobile-first
 */
 @media (max-width: 767px) {
   .navbar {
@@ -345,24 +363,27 @@ tr:hover {
     gap: 0.25rem;
   }
   .navbar a {
-    padding: 0.75rem 1rem;
-    font-size: 0.95rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+  .dark-mode-toggle {
+    padding: 0.3rem;
   }
   .tab-content {
     padding: 1rem 0.75rem;
   }
   table {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     border: 0;
   }
   th,
   td {
-    padding: 0.75rem 0.5rem;
-    min-width: 100px;
+    padding: 0.5rem 0.75rem;
+    min-width: 80px;
   }
   #tab2 .progress-table th,
   #tab2 .progress-table td {
-    min-width: 100px;
+    min-width: 80px;
   }
   th {
     position: relative;
@@ -370,19 +391,27 @@ tr:hover {
   }
   h1,
   h2 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     text-align: center;
   }
   button {
-    width: 100%;
-    margin-bottom: 0.5rem;
+    min-width: auto;
+    padding: 0.5rem;
   }
   .input-row input {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    padding: 0.5rem;
   }
   .table-wrapper {
     margin: 0 -0.75rem;
     padding: 0 0.75rem;
+  }
+  .progress-table td:last-child {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .progress-table td:last-child button {
+    width: 100%;
   }
 }
 @media (min-width: 768px) {
@@ -407,11 +436,11 @@ tr:hover {
 @media (min-width: 1024px) {
   th,
   td {
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.25rem;
   }
   h1,
   h2 {
-    font-size: 2.25rem;
+    font-size: 1.875rem;
   }
 }
 * {
@@ -423,35 +452,35 @@ html {
 }
 #tab2 .progress-table th,
 #tab2 .progress-table td {
-  min-width: 200px;
+  min-width: 150px;
 }
 #tab2 .progress-table th:nth-child(1),
 #tab2 .progress-table td:nth-child(1) {
-  min-width: 150px;
+  min-width: 120px;
 }
 #tab2 .progress-table th:nth-child(2),
 #tab2 .progress-table td:nth-child(2) {
-  min-width: 120px;
+  min-width: 100px;
 }
 #tab2 .progress-table th:nth-child(5),
 #tab2 .progress-table td:nth-child(5) {
-  min-width: 150px;
+  min-width: 120px;
 }
 #tab2 .progress-table th:nth-child(6),
 #tab2 .progress-table td:nth-child(6) {
-  min-width: 150px;
+  min-width: 120px;
 }
 #tab2 .progress-table th:nth-child(10),
 #tab2 .progress-table td:nth-child(10) {
-  min-width: 150px;
+  min-width: 120px;
 }
 #tab2 .progress-table th:nth-child(12),
 #tab2 .progress-table td:nth-child(12) {
-  min-width: 150px;
+  min-width: 120px;
 }
 #tab2 .progress-table th:nth-child(16),
 #tab2 .progress-table td:nth-child(16) {
-  min-width: 120px;
+  min-width: 100px;
 }
 body.dark-mode input::placeholder,
 button:disabled,
