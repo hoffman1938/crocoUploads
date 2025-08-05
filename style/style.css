@@ -37,6 +37,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 .navbar {
+  position: fixed !important;
+  width: 100%;
   background-color: var(--accent-color);
   display: flex;
   overflow-x: auto;
