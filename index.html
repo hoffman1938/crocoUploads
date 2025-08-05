@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ka">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ახალი რეგისტრაცია-ვერიფიკაცია</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style/style.css" />
+    <link rel="shortcut icon" href="./favicon.png" type="image/x-icon" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+  <body>
+    <div class="navbar">
+      <a href="#tab1" onclick="openTab('tab1')" class="active"
+        >ახალი რეგისტრაცია-ვერიფიკაცია</a
+      >
+      <a href="#tab2" onclick="openTab('tab2')">პროგრესები-განმეორებითები</a>
+      <a href="#tab3" onclick="openTab('tab3')">აფლოუდი</a>
+    </div>
+
+    <div id="tab1" class="tab-content active">
+      <h1>ახალი რეგისტრაცია-ვერიფიკაცია</h1>
+      <h2>ახალი ჩანაწერის დამატება</h2>
+      <div class="table-wrapper">
+        <table class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>დარეკვის თარიღი</th>
+              <th>მომხმარებლის ID</th>
+              <th>რეგისტრაციის თარიღი</th>
+              <th>ოპერატორი</th>
+              <th>შედეგი</th>
+              <th>კომენტარი</th>
+              <th>სხვა შენიშვნა</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="input-row">
+              <td></td>
+              <td>
+                <input
+                  type="date"
+                  id="callDate"
+                  required
+                  placeholder="დარეკვის თარიღი"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="userId"
+                  required
+                  placeholder="მომხმარებლის ID"
+                />
+              </td>
+              <td>
+                <input
+                  type="date"
+                  id="regDate"
+                  required
+                  placeholder="რეგისტრაციის თარიღი"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="operator"
+                  required
+                  placeholder="ოპერატორი"
+                />
+              </td>
+              <td>
+                <input type="text" id="contact" required placeholder="შედეგი" />
+              </td>
+              <td>
+                <input type="text" id="comment" placeholder="კომენტარი" />
+              </td>
+              <td>
+                <input type="text" id="otherNote" placeholder="სხვა შენიშვნა" />
+              </td>
+              <td>
+                <button class="save-btn" id="saveBtn" onclick="saveRow()">
+                  შენახვა
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <input
+        type="file"
+        id="excelUpload"
+        accept=".xlsx, .xls"
+        onchange="handleExcelUpload(event)"
+        style="display: none"
+      />
+      <button onclick="document.getElementById('excelUpload').click()">
+        Upload Excel
+      </button>
+      <input type="text" id="searchInput" placeholder="ძებნა..." />
+      <button id="bulkDelete" onclick="bulkDeleteRows()">წაშლა შერჩეული</button>
+      <div class="table-wrapper">
+        <table id="dataTable" class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th onclick="sortTable('callDate')">დარეკვის თარიღი</th>
+              <th onclick="sortTable('userId')">მომხმარებლის ID</th>
+              <th onclick="sortTable('regDate')">რეგისტრაციის თარიღი</th>
+              <th onclick="sortTable('operator')">ოპერატორი</th>
+              <th onclick="sortTable('contact')">შედეგი</th>
+              <th onclick="sortTable('comment')">კომენტარი</th>
+              <th onclick="sortTable('otherNote')">სხვა შენიშვნა</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div id="pagination"></div>
+    </div>
+
+    <div id="tab2" class="tab-content">
+      <h1>პროგრესები-განმეორებითები</h1>
+      <h2>ახალი ჩანაწერის დამატება</h2>
+      <p class="info-text">
+        გადაწიეთ ჰორიზონტალურად (მარჯვნივ ან მარცხნივ) სრულად სვეტების
+        სანახავად. თითოეული სვეტი აღწერს კონკრეტულ ინფორმაციას — გადაიხედეთ ზედა
+        ნაწილში არსებულ სათაურებს.
+      </p>
+      <div class="table-wrapper">
+        <table class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Date</th>
+              <th>Hour</th>
+              <th>Source</th>
+              <th>თამთა</th>
+              <th>UserID</th>
+              <th>Contact</th>
+              <th>Result</th>
+              <th>Next Call</th>
+              <th>Note</th>
+              <th>განმეორებითი</th>
+              <th>Operator 2</th>
+              <th>Contact 2</th>
+              <th>Result 2</th>
+              <th>კომენტარი</th>
+              <th>Verified</th>
+              <th>Category</th>
+              <th>Count</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="input-row">
+              <td></td>
+              <td>
+                <input
+                  type="date"
+                  id="progressDate"
+                  required
+                  placeholder="Date"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  id="progressHour"
+                  required
+                  placeholder="Hour"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressSource"
+                  required
+                  placeholder="Source"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressOperator"
+                  required
+                  placeholder="თამთა"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressUserId"
+                  required
+                  placeholder="UserID"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressContact"
+                  required
+                  placeholder="Contact"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressResult"
+                  required
+                  placeholder="Result"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressNextCall"
+                  placeholder="Next Call"
+                />
+              </td>
+              <td>
+                <input type="text" id="progressNote" placeholder="Note" />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressRepeat"
+                  disabled
+                  placeholder="განმეორებითი (auto)"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressOperator2"
+                  placeholder="Operator 2"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressContact2"
+                  placeholder="Contact 2"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressResult2"
+                  placeholder="Result 2"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressComment"
+                  placeholder="კომენტარი"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressVerified"
+                  placeholder="Verified"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressCategory"
+                  placeholder="Category"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="progressCount"
+                  disabled
+                  placeholder="Count (auto)"
+                />
+              </td>
+              <td>
+                <button
+                  class="save-btn"
+                  id="progressSaveBtn"
+                  onclick="saveProgressRow()"
+                >
+                  შენახვა
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <input
+        type="file"
+        id="progressExcelUpload"
+        accept=".xlsx, .xls"
+        onchange="handleProgressExcelUpload(event)"
+        style="display: none"
+      />
+      <button onclick="document.getElementById('progressExcelUpload').click()">
+        Upload Excel
+      </button>
+      <input type="text" id="progressSearchInput" placeholder="ძებნა..." />
+      <button id="progressBulkDelete" onclick="progressBulkDeleteRows()">
+        წაშლა შერჩეული
+      </button>
+      <p class="info-text">
+        გადაწიეთ ჰორიზონტალურად (მარჯვნივ ან მარცხნივ) სრულად სვეტების
+        სანახავად. თითოეული სვეტი აღწერს კონკრეტულ ინფორმაციას — გადაიხედეთ ზედა
+        ნაწილში არსებულ სათაურებს.
+      </p>
+      <div class="table-wrapper">
+        <table id="progressDataTable" class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th onclick="sortProgressTable('date')">Date</th>
+              <th onclick="sortProgressTable('hour')">Hour</th>
+              <th onclick="sortProgressTable('source')">Source</th>
+              <th onclick="sortProgressTable('operator')">თამთა</th>
+              <th onclick="sortProgressTable('userId')">UserID</th>
+              <th onclick="sortProgressTable('contact')">Contact</th>
+              <th onclick="sortProgressTable('result')">Result</th>
+              <th onclick="sortProgressTable('nextCall')">Next Call</th>
+              <th onclick="sortProgressTable('note')">Note</th>
+              <th onclick="sortProgressTable('repeat')">განმეორებითი</th>
+              <th onclick="sortProgressTable('operator2')">Operator 2</th>
+              <th onclick="sortProgressTable('contact2')">Contact 2</th>
+              <th onclick="sortProgressTable('result2')">Result 2</th>
+              <th onclick="sortProgressTable('comment')">კომენტარი</th>
+              <th onclick="sortProgressTable('verified')">Verified</th>
+              <th onclick="sortProgressTable('category')">Category</th>
+              <th onclick="sortProgressTable('count')">Count</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody id="progressTableBody"></tbody>
+        </table>
+      </div>
+      <div id="progressPagination"></div>
+    </div>
+
+    <div id="tab3" class="tab-content">
+      <h1>აფლოუდი</h1>
+      <h2>ახალი ჩანაწერის დამატება</h2>
+      <div class="table-wrapper">
+        <table class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>ოპერატორი</th>
+              <th>ტიპი</th>
+              <th>მომხმარებლის ID</th>
+              <th>დღე</th>
+              <th>თვე</th>
+              <th>წელი</th>
+              <th>ატვირთვის დრო</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="input-row">
+              <td></td>
+              <td>
+                <input
+                  type="text"
+                  id="uploadOperator"
+                  required
+                  placeholder="ოპერატორი"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="uploadType"
+                  required
+                  placeholder="ტიპი"
+                />
+              </td>
+              <td>
+                <input
+                  type="text"
+                  id="uploadUserId"
+                  required
+                  placeholder="მომხმარებლის ID"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  id="uploadDay"
+                  min="1"
+                  max="31"
+                  required
+                  placeholder="დღე"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  id="uploadMonth"
+                  min="1"
+                  max="12"
+                  required
+                  placeholder="თვე"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  id="uploadYear"
+                  min="2000"
+                  max="2100"
+                  required
+                  placeholder="წელი"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  id="uploadTime"
+                  required
+                  placeholder="ატვირთვის დრო"
+                />
+              </td>
+              <td>
+                <button
+                  class="save-btn"
+                  id="uploadSaveBtn"
+                  onclick="saveUploadRow()"
+                >
+                  შენახვა
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <input
+        type="file"
+        id="uploadExcelUpload"
+        accept=".xlsx, .xls"
+        onchange="handleUploadExcelUpload(event)"
+        style="display: none"
+      />
+      <button onclick="document.getElementById('uploadExcelUpload').click()">
+        Upload Excel
+      </button>
+      <input type="text" id="uploadSearchInput" placeholder="ძებნა..." />
+      <button id="uploadBulkDelete" onclick="uploadBulkDeleteRows()">
+        წაშლა შერჩეული
+      </button>
+      <div class="table-wrapper">
+        <table id="uploadDataTable" class="progress-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th onclick="sortUploadTable('currentDate')">
+                დღევანდელი თარიღი
+              </th>
+              <th onclick="sortUploadTable('operator')">ოპერატორი</th>
+              <th onclick="sortUploadTable('type')">ტიპი</th>
+              <th onclick="sortUploadTable('userId')">მომხმარებლის ID</th>
+              <th onclick="sortUploadTable('actionValidity')">
+                მოქმედების ვადა
+              </th>
+              <th onclick="sortUploadTable('completionValidity')">
+                დასრულების ვადა
+              </th>
+              <th onclick="sortUploadTable('uploadTime')">ატვირთვის დრო</th>
+              <th>ქმედებები</th>
+            </tr>
+          </thead>
+          <tbody id="uploadTableBody"></tbody>
+        </table>
+      </div>
+      <div id="uploadPagination"></div>
+    </div>
+
+    <!-- Dark mode toggle -->
+    <div class="dark-mode-toggle" onclick="toggleDarkMode()">🌙</div>
+
+    <script src="./script/script.js"></script>
+  </body>
+</html>
