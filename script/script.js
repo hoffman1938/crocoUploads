@@ -18,7 +18,7 @@ let sortDirection = "asc";
 
 async function loadData() {
   try {
-    const response = await fetch("http://localhost:3000/data");
+    const response = await fetch("https://crocouploads.onrender.com/data");
     data = await response.json();
     renderTable();
   } catch (error) {
@@ -280,7 +280,9 @@ let progressSortDirection = "asc";
 // Load progress data
 async function loadProgressData() {
   try {
-    const response = await fetch("http://localhost:3000/progress-data");
+    const response = await fetch(
+      "https://crocouploads.onrender.com/progress-data"
+    );
     progressData = await response.json();
     calculateRepeats();
     renderProgressTable();
@@ -565,7 +567,7 @@ async function progressBulkDeleteRows() {
 
 async function saveProgressData() {
   try {
-    await fetch("http://localhost:3000/save-progress", {
+    await fetch("https://crocouploads.onrender.com/save-progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(progressData),
@@ -707,7 +709,7 @@ document.getElementById("progressDate").value = new Date()
 
 async function saveData() {
   try {
-    await fetch("http://localhost:3000/save", {
+    await fetch("https://crocouploads.onrender.com/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -774,7 +776,9 @@ let uploadSortDirection = "asc";
 
 async function loadUploadData() {
   try {
-    const response = await fetch("http://localhost:3000/upload-data");
+    const response = await fetch(
+      "https://crocouploads.onrender.com/upload-data"
+    );
     uploadData = await response.json();
     renderUploadTable();
   } catch (error) {
@@ -984,7 +988,7 @@ async function uploadBulkDeleteRows() {
 
 async function saveUploadData() {
   try {
-    await fetch("http://localhost:3000/save-upload", {
+    await fetch("https://crocouploads.onrender.com/save-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(uploadData),
