@@ -18,7 +18,7 @@ let sortDirection = "asc";
 
 async function loadData() {
   try {
-    const response = await fetch("https://crocouploads.onrender.com/data");
+    const response = await fetch("/data");
     data = await response.json();
     renderTable();
   } catch (error) {
@@ -280,9 +280,7 @@ let progressSortDirection = "asc";
 // Load progress data
 async function loadProgressData() {
   try {
-    const response = await fetch(
-      "https://crocouploads.onrender.com/progress-data"
-    );
+    const response = await fetch("/progress-data");
     progressData = await response.json();
     calculateRepeats();
     renderProgressTable();
@@ -567,7 +565,7 @@ async function progressBulkDeleteRows() {
 
 async function saveProgressData() {
   try {
-    await fetch("https://crocouploads.onrender.com/save-progress", {
+    await fetch("/save-progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(progressData),
@@ -709,7 +707,7 @@ document.getElementById("progressDate").value = new Date()
 
 async function saveData() {
   try {
-    await fetch("https://crocouploads.onrender.com/save", {
+    await fetch("/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -776,9 +774,7 @@ let uploadSortDirection = "asc";
 
 async function loadUploadData() {
   try {
-    const response = await fetch(
-      "https://crocouploads.onrender.com/upload-data"
-    );
+    const response = await fetch("/upload-data");
     uploadData = await response.json();
     renderUploadTable();
   } catch (error) {
@@ -988,7 +984,7 @@ async function uploadBulkDeleteRows() {
 
 async function saveUploadData() {
   try {
-    await fetch("https://crocouploads.onrender.com/save-upload", {
+    await fetch("/save-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(uploadData),
