@@ -118,7 +118,6 @@ table {
   border-spacing: 0;
   margin-top: 1.5rem;
   background-color: var(--card-bg);
-  backdrop-filter: var(--glass-blur);
   border-radius: var(--border-radius);
   overflow: hidden;
   box-shadow: var(--shadow);
@@ -260,7 +259,7 @@ h2 {
   margin-left: auto;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 100%;
-  padding: 0.5rem;
+  padding: 0.7rem;
   cursor: pointer;
   transition: var(--transition);
   color: white;
@@ -276,7 +275,6 @@ body.dark-mode {
   --bg-color: #0f172a;
   --text-color: #f1f5f9;
   --card-bg: rgba(15, 23, 42, 0.95);
-  --border-color: #1e293b;
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
   --accent-color: #60a5fa;
 }
@@ -327,7 +325,6 @@ body.dark-mode .dark-mode-toggle {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 20px;
   transition: opacity 0.3s ease;
   pointer-events: none;
   z-index: 1;
@@ -369,7 +366,7 @@ tr:hover {
     font-size: 0.875rem;
   }
   .dark-mode-toggle {
-    padding: 0.3rem;
+    padding: 0.7rem;
   }
   .tab-content {
     padding: 1rem 0.75rem;
