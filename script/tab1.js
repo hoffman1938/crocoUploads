@@ -1,4 +1,4 @@
-// tab1.js (updated)
+// tab1.js (updated with persistent selections)
 let data = [];
 let currentPage = 0;
 let editIndex = -1;
@@ -6,6 +6,7 @@ const itemsPerPage = 25;
 let sortColumn = null;
 let sortDirection = "asc";
 let filterValues = {};
+let selectedIndices = new Set();
 
 async function loadData() {
   try {
@@ -139,10 +140,22 @@ function renderTable() {
     `;
     tableBody.appendChild(tr);
 
+    const cb = tr.querySelector(".row-select");
+    cb.checked = selectedIndices.has(originalIndex);
+    cb.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      if (e.target.checked) {
+        selectedIndices.add(idx);
+      } else {
+        selectedIndices.delete(idx);
+      }
+    });
+
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
         const cb = tr.querySelector(".row-select");
         cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
       }
     });
   });
@@ -219,6 +232,7 @@ async function saveRow() {
 async function deleteRow(index) {
   if (index >= 0 && index < data.length) {
     data[index].deleted = true;
+    selectedIndices.delete(index);
     await saveData();
     createFilters();
     renderTable();
@@ -226,8 +240,11 @@ async function deleteRow(index) {
 }
 
 async function bulkDeleteRows() {
-  const selected = document.querySelectorAll(".row-select:checked");
-  const indices = Array.from(selected).map((cb) => parseInt(cb.dataset.index));
+  const indices = Array.from(selectedIndices);
+  if (indices.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
   indices.sort((a, b) => b - a);
   indices.forEach((idx) => {
     if (idx >= 0 && idx < data.length) {
@@ -235,6 +252,7 @@ async function bulkDeleteRows() {
     }
   });
   await saveData();
+  selectedIndices.clear();
   createFilters();
   renderTable();
 }
@@ -321,16 +339,14 @@ async function saveData() {
 }
 
 function downloadSelectedTab1() {
-  const selected = document.querySelectorAll(".row-select:checked");
-  if (selected.length === 0) {
+  const indices = Array.from(selectedIndices);
+  if (indices.length === 0) {
     alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
     return;
   }
 
-  const selectedData = Array.from(selected).map(cb => {
-    const index = parseInt(cb.dataset.index);
-    return data[index];
-  });
+  indices.sort((a, b) => a - b); // Sort by original index for consistent order
+  const selectedData = indices.map(idx => data[idx]);
 
   const headers = ["დარეკვის თარიღი", "მომხმარებლის ID", "რეგისტრაციის თარიღი", "ოპერატორი", "კონტაქტი", "კომენტარი", "სხვა შენიშვნა"];
   const ws_data = [headers, ...selectedData.map(row => [row.callDate, row.userId, row.regDate, row.operator, row.contact, row.comment, row.otherNote])];

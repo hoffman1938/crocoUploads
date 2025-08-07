@@ -1,4 +1,4 @@
-// tab3.js (updated, with await loadUploadData() already present, added download)
+// tab3.js (updated with persistent selections)
 let uploadData = [];
 let uploadCurrentPage = 0;
 let uploadEditIndex = -1;
@@ -6,6 +6,7 @@ const uploadItemsPerPage = 25;
 let uploadSortColumn = null;
 let uploadSortDirection = "asc";
 let uploadFilterValues = {};
+let uploadSelectedIndices = new Set();
 
 async function loadUploadData() {
   try {
@@ -177,10 +178,22 @@ function renderUploadTable() {
     `;
     tableBody.appendChild(tr);
 
+    const cb = tr.querySelector(".upload-row-select");
+    cb.checked = uploadSelectedIndices.has(originalIndex);
+    cb.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      if (e.target.checked) {
+        uploadSelectedIndices.add(idx);
+      } else {
+        uploadSelectedIndices.delete(idx);
+      }
+    });
+
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
         const cb = tr.querySelector(".upload-row-select");
         cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
       }
     });
   });
@@ -263,14 +276,18 @@ function editUploadRow(index) {
 async function deleteUploadRow(index) {
   if (index >= 0 && index < uploadData.length) {
     uploadData[index].deleted = true;
+    uploadSelectedIndices.delete(index);
     await saveUploadData();
     await loadUploadData();
   }
 }
 
 async function uploadBulkDeleteRows() {
-  const selected = document.querySelectorAll(".upload-row-select:checked");
-  const indices = Array.from(selected).map((cb) => parseInt(cb.dataset.index));
+  const indices = Array.from(uploadSelectedIndices);
+  if (indices.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
   indices.sort((a, b) => b - a);
   indices.forEach((idx) => {
     if (idx >= 0 && idx < uploadData.length) {
@@ -278,6 +295,7 @@ async function uploadBulkDeleteRows() {
     }
   });
   await saveUploadData();
+  uploadSelectedIndices.clear();
   await loadUploadData();
 }
 
@@ -359,16 +377,14 @@ async function handleUploadExcelUpload(event) {
 }
 
 function downloadSelectedTab3() {
-  const selected = document.querySelectorAll(".upload-row-select:checked");
-  if (selected.length === 0) {
+  const indices = Array.from(uploadSelectedIndices);
+  if (indices.length === 0) {
     alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
     return;
   }
 
-  const selectedData = Array.from(selected).map(cb => {
-    const index = parseInt(cb.dataset.index);
-    return uploadData[index];
-  });
+  indices.sort((a, b) => a - b); // Sort by original index for consistent order
+  const selectedData = indices.map(idx => uploadData[idx]);
 
   const headers = ["დღევანდელი თარიღი", "ოპერატორი", "ტიპი", "მომხმარებლის ID", "მოქმედების ვადა", "დასრულების ვადა", "ატვირთვის დრო"];
   const ws_data = [headers, ...selectedData.map(row => [row.currentDate, row.operator, row.type, row.userId, `${row.day} ${row.month} ${row.year}`, `${row.day}/${row.month}/${row.year}`, row.uploadTime])];

@@ -1,4 +1,4 @@
-// tab2.js (updated, with await loadProgressData() already present, added download)
+// tab2.js (updated with persistent selections)
 let progressData = [];
 let progressCurrentPage = 0;
 let progressEditIndex = -1;
@@ -6,6 +6,7 @@ const progressItemsPerPage = 25;
 let progressSortColumn = null;
 let progressSortDirection = "asc";
 let progressFilterValues = {};
+let progressSelectedIndices = new Set();
 
 async function loadProgressData() {
   try {
@@ -147,10 +148,22 @@ function renderProgressTable() {
     `;
     tableBody.appendChild(tr);
 
+    const cb = tr.querySelector(".progress-row-select");
+    cb.checked = progressSelectedIndices.has(originalIndex);
+    cb.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      if (e.target.checked) {
+        progressSelectedIndices.add(idx);
+      } else {
+        progressSelectedIndices.delete(idx);
+      }
+    });
+
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
         const cb = tr.querySelector(".progress-row-select");
         cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
       }
     });
   });
@@ -299,14 +312,18 @@ function editProgressRow(index) {
 async function deleteProgressRow(index) {
   if (index >= 0 && index < progressData.length) {
     progressData[index].deleted = true;
+    progressSelectedIndices.delete(index);
     await saveProgressData();
     await loadProgressData();
   }
 }
 
 async function progressBulkDeleteRows() {
-  const selected = document.querySelectorAll(".progress-row-select:checked");
-  const indices = Array.from(selected).map((cb) => parseInt(cb.dataset.index));
+  const indices = Array.from(progressSelectedIndices);
+  if (indices.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
   indices.sort((a, b) => b - a);
   indices.forEach((idx) => {
     if (idx >= 0 && idx < progressData.length) {
@@ -314,6 +331,7 @@ async function progressBulkDeleteRows() {
     }
   });
   await saveProgressData();
+  progressSelectedIndices.clear();
   await loadProgressData();
 }
 
@@ -396,16 +414,14 @@ async function handleProgressExcelUpload(event) {
 }
 
 function downloadSelectedTab2() {
-  const selected = document.querySelectorAll(".progress-row-select:checked");
-  if (selected.length === 0) {
+  const indices = Array.from(progressSelectedIndices);
+  if (indices.length === 0) {
     alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
     return;
   }
 
-  const selectedData = Array.from(selected).map(cb => {
-    const index = parseInt(cb.dataset.index);
-    return progressData[index];
-  });
+  indices.sort((a, b) => a - b); // Sort by original index for consistent order
+  const selectedData = indices.map(idx => progressData[idx]);
 
   const headers = ["Date", "Hour", "Source", "ოპერატორი", "UserID", "Contact", "Result", "Next Call", "Note", "განმეორებითი", "Operator 2", "Contact 2", "Result 2", "კომენტარი", "Verified", "Category", "Count"];
   const ws_data = [headers, ...selectedData.map(row => [row.date, row.hour, row.source, row.operator, row.userId, row.contact, row.result, row.nextCall, row.note, row.repeat, row.operator2, row.contact2, row.result2, row.comment, row.verified, row.category, row.count])];
