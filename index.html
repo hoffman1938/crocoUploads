@@ -101,13 +101,16 @@
         onchange="handleExcelUpload(event)"
         style="display: none"
       />
+      
+      <input type="text" id="searchInput" placeholder="ძებნა..." />
+      <div class="deluplfilt">
+      <button id="bulkDelete" onclick="bulkDeleteRows()">შერჩეულის წაშლა</button>
       <button onclick="document.getElementById('excelUpload').click()">
         Excel-ის ატვირთვა
       </button>
-      <input type="text" id="searchInput" placeholder="ძებნა..." />
-      <button id="bulkDelete" onclick="bulkDeleteRows()">შერჩეულის წაშლა</button>
-      <button onclick="downloadSelectedTab1()">შერჩეულის ჩამოტვირთვა Excel-ში</button>
-      <button onclick="openFiltersPopup('filtersModal')">ფილტრები</button> <!-- Кнопка для открытия попапა -->
+      <button onclick="downloadSelectedTab1()">ჩამოტვირთვა Excel-ში</button>
+      <button onclick="openFiltersPopup('filtersModal')">ფილტრები</button>
+      </div>
       <div id="filtersModal" class="modal">
         <div class="modal-content">
           <span class="close" onclick="closeFiltersPopup('filtersModal')">&times;</span>
@@ -315,20 +318,23 @@
         onchange="handleProgressExcelUpload(event)"
         style="display: none"
       />
-      <button onclick="document.getElementById('progressExcelUpload').click()">
-        Excel-ის ატვირთვა
-      </button>
+     
       <input type="text" id="progressSearchInput" placeholder="ძებნა..." />
 
       <p class="info-text">
         გადაწიეთ ჰორიზონტალურად (მარჯვნივ ან მარცხნივ) სრულად სვეტების
         სანახავად. თითოეული სვეტი აღწერს კონკრეტულ ინფორმაციას.
       </p>
+      <div class="deluplfilt">
       <button id="progressBulkDelete" onclick="progressBulkDeleteRows()">
         შერჩეულის წაშლა
       </button>
-      <button onclick="downloadSelectedTab2()">შერჩეულის ჩამოტვირთვა Excel-ში</button>
+       <button onclick="document.getElementById('progressExcelUpload').click()">
+        Excel-ის ატვირთვა
+      </button>
+      <button onclick="downloadSelectedTab2()">ჩამოტვირთვა Excel-ში</button>
       <button onclick="openFiltersPopup('progressFiltersModal')">ფილტრები</button> <!-- Кнопка для открытия попапა -->
+      </div>
       <div id="progressFiltersModal" class="modal">
         <div class="modal-content">
           <span class="close" onclick="closeFiltersPopup('progressFiltersModal')">&times;</span>
@@ -470,15 +476,18 @@
         onchange="handleUploadExcelUpload(event)"
         style="display: none"
       />
-      <button onclick="document.getElementById('uploadExcelUpload').click()">
-        Excel-ის ატვირთვა
-      </button>
+      
       <input type="text" id="uploadSearchInput" placeholder="ძებნა..." />
+      <div class="deluplfilt">
       <button id="uploadBulkDelete" onclick="uploadBulkDeleteRows()">
         შერჩეულის წაშლა
       </button>
-      <button onclick="downloadSelectedTab3()">შერჩეულის ჩამოტვირთვა Excel-ში</button>
-      <button onclick="openFiltersPopup('uploadFiltersModal')">ფილტრები</button> <!-- Кнопка для открытия попапა -->
+      <button onclick="document.getElementById('uploadExcelUpload').click()">
+        Excel-ის ატვირთვა
+      </button>
+      <button onclick="downloadSelectedTab3()">ჩამოტვირთვა Excel-ში</button>
+      <button onclick="openFiltersPopup('uploadFiltersModal')">ფილტრები</button> 
+      </div>
       <div id="uploadFiltersModal" class="modal">
         <div class="modal-content">
           <span class="close" onclick="closeFiltersPopup('uploadFiltersModal')">&times;</span>
