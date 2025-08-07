@@ -1,4 +1,4 @@
-// tab2.js
+// tab2.js (updated, with await loadProgressData() already present, added download)
 let progressData = [];
 let progressCurrentPage = 0;
 let progressEditIndex = -1;
@@ -60,7 +60,8 @@ function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
-function applyFilters(modalId) {
+async function applyFiltersTab2(modalId) {
+  await loadProgressData();
   progressCurrentPage = 0;
   renderProgressTable();
   closeFiltersPopup(modalId);
@@ -270,7 +271,7 @@ async function saveProgressRow() {
   }
 
   await saveProgressData();
-  await loadProgressData(); // Перезагрузка данных с сервера
+  await loadProgressData();
   clearProgressInputs();
 }
 
@@ -299,7 +300,7 @@ async function deleteProgressRow(index) {
   if (index >= 0 && index < progressData.length) {
     progressData[index].deleted = true;
     await saveProgressData();
-    await loadProgressData(); // Перезагрузка
+    await loadProgressData();
   }
 }
 
@@ -313,7 +314,7 @@ async function progressBulkDeleteRows() {
     }
   });
   await saveProgressData();
-  await loadProgressData(); // Перезагрузка
+  await loadProgressData();
 }
 
 async function saveProgressData() {
@@ -389,7 +390,27 @@ async function handleProgressExcelUpload(event) {
     });
 
     await saveProgressData();
-    await loadProgressData(); // Перезагрузка после загрузки Excel
+    await loadProgressData();
   };
   reader.readAsBinaryString(file);
+}
+
+function downloadSelectedTab2() {
+  const selected = document.querySelectorAll(".progress-row-select:checked");
+  if (selected.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
+
+  const selectedData = Array.from(selected).map(cb => {
+    const index = parseInt(cb.dataset.index);
+    return progressData[index];
+  });
+
+  const headers = ["Date", "Hour", "Source", "ოპერატორი", "UserID", "Contact", "Result", "Next Call", "Note", "განმეორებითი", "Operator 2", "Contact 2", "Result 2", "კომენტარი", "Verified", "Category", "Count"];
+  const ws_data = [headers, ...selectedData.map(row => [row.date, row.hour, row.source, row.operator, row.userId, row.contact, row.result, row.nextCall, row.note, row.repeat, row.operator2, row.contact2, row.result2, row.comment, row.verified, row.category, row.count])];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Progress");
+  XLSX.writeFile(wb, "selected_progress.xlsx");
 }

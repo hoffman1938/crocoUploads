@@ -1,4 +1,4 @@
-// tab1.js
+// tab1.js (updated)
 let data = [];
 let currentPage = 0;
 let editIndex = -1;
@@ -59,7 +59,15 @@ function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
-function applyFilters(modalId) {
+async function applyFiltersTab1(modalId) {
+  const columns = ['callDate', 'userId', 'regDate', 'operator', 'contact', 'comment', 'otherNote'];
+  columns.forEach(column => {
+    const select = document.getElementById(`filter-${column}`);
+    if (select) {
+      filterValues[column] = select.value;
+    }
+  });
+  await loadData(); // Reload from server for freshness
   currentPage = 0;
   renderTable();
   closeFiltersPopup(modalId);
@@ -202,7 +210,9 @@ async function saveRow() {
   }
 
   await saveData();
-  await loadData(); // Перезагрузка данных с сервера для синхронизации
+  createFilters();
+  currentPage = 0;
+  renderTable();
   clearInputs();
 }
 
@@ -210,7 +220,8 @@ async function deleteRow(index) {
   if (index >= 0 && index < data.length) {
     data[index].deleted = true;
     await saveData();
-    await loadData(); // Перезагрузка
+    createFilters();
+    renderTable();
   }
 }
 
@@ -224,7 +235,8 @@ async function bulkDeleteRows() {
     }
   });
   await saveData();
-  await loadData(); // Перезагрузка
+  createFilters();
+  renderTable();
 }
 
 function editRow(index) {
@@ -289,7 +301,9 @@ async function handleExcelUpload(event) {
     });
 
     await saveData();
-    await loadData(); // Перезагрузка после загрузки Excel
+    createFilters();
+    currentPage = 0;
+    renderTable();
   };
   reader.readAsBinaryString(file);
 }
@@ -304,4 +318,24 @@ async function saveData() {
   } catch (error) {
     console.error("Error saving data:", error);
   }
+}
+
+function downloadSelectedTab1() {
+  const selected = document.querySelectorAll(".row-select:checked");
+  if (selected.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
+
+  const selectedData = Array.from(selected).map(cb => {
+    const index = parseInt(cb.dataset.index);
+    return data[index];
+  });
+
+  const headers = ["დარეკვის თარიღი", "მომხმარებლის ID", "რეგისტრაციის თარიღი", "ოპერატორი", "კონტაქტი", "კომენტარი", "სხვა შენიშვნა"];
+  const ws_data = [headers, ...selectedData.map(row => [row.callDate, row.userId, row.regDate, row.operator, row.contact, row.comment, row.otherNote])];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Data");
+  XLSX.writeFile(wb, "selected_data.xlsx");
 }

@@ -1,4 +1,4 @@
-// tab3.js
+// tab3.js (updated, with await loadUploadData() already present, added download)
 let uploadData = [];
 let uploadCurrentPage = 0;
 let uploadEditIndex = -1;
@@ -72,7 +72,8 @@ function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
-function applyFilters(modalId) {
+async function applyFiltersTab3(modalId) {
+  await loadUploadData();
   uploadCurrentPage = 0;
   renderUploadTable();
   closeFiltersPopup(modalId);
@@ -242,7 +243,7 @@ async function saveUploadRow() {
   }
 
   await saveUploadData();
-  await loadUploadData(); // Перезагрузка данных с сервера
+  await loadUploadData();
   clearUploadInputs();
 }
 
@@ -263,7 +264,7 @@ async function deleteUploadRow(index) {
   if (index >= 0 && index < uploadData.length) {
     uploadData[index].deleted = true;
     await saveUploadData();
-    await loadUploadData(); // Перезагрузка
+    await loadUploadData();
   }
 }
 
@@ -277,7 +278,7 @@ async function uploadBulkDeleteRows() {
     }
   });
   await saveUploadData();
-  await loadUploadData(); // Перезагрузка
+  await loadUploadData();
 }
 
 async function saveUploadData() {
@@ -352,7 +353,27 @@ async function handleUploadExcelUpload(event) {
     });
 
     await saveUploadData();
-    await loadUploadData(); // Перезагрузка после загрузки Excel
+    await loadUploadData();
   };
   reader.readAsBinaryString(file);
+}
+
+function downloadSelectedTab3() {
+  const selected = document.querySelectorAll(".upload-row-select:checked");
+  if (selected.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
+
+  const selectedData = Array.from(selected).map(cb => {
+    const index = parseInt(cb.dataset.index);
+    return uploadData[index];
+  });
+
+  const headers = ["დღევანდელი თარიღი", "ოპერატორი", "ტიპი", "მომხმარებლის ID", "მოქმედების ვადა", "დასრულების ვადა", "ატვირთვის დრო"];
+  const ws_data = [headers, ...selectedData.map(row => [row.currentDate, row.operator, row.type, row.userId, `${row.day} ${row.month} ${row.year}`, `${row.day}/${row.month}/${row.year}`, row.uploadTime])];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Upload");
+  XLSX.writeFile(wb, "selected_upload.xlsx");
 }

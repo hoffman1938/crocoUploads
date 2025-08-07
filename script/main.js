@@ -1,4 +1,4 @@
-// main.js
+// main.js (updated with socket.io client)
 function openTab(tabId) {
   const tabs = document.querySelectorAll(".tab-content");
   tabs.forEach((tab) => tab.classList.remove("active"));
@@ -90,4 +90,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   }
+
+  // Socket.io for real-time updates
+  const socket = io();
+  socket.on('data-updated', (msg) => {
+    if (msg.type === 'data') {
+      loadData();
+    } else if (msg.type === 'progress') {
+      loadProgressData();
+    } else if (msg.type === 'upload') {
+      loadUploadData();
+    }
+  });
 });

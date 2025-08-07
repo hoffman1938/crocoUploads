@@ -1,9 +1,15 @@
+// server.js (updated with socket.io for real-time updates)
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path"); // Для путей
+const http = require('http');
+const socketIo = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
+
 const port = 3000;
 app.use(express.json());
 app.use(cors());
@@ -88,6 +94,7 @@ app.post("/save", async (req, res) => {
     const newData = req.body;
     await Data.deleteMany({});
     await Data.insertMany(newData);
+    io.emit('data-updated', { type: 'data' }); // Emit real-time update
     res.sendStatus(200);
   } catch (err) {
     res.status(500).send(err.message);
@@ -109,6 +116,7 @@ app.post("/save-progress", async (req, res) => {
     const newData = req.body;
     await Progress.deleteMany({});
     await Progress.insertMany(newData);
+    io.emit('data-updated', { type: 'progress' }); // Emit real-time update
     res.sendStatus(200);
   } catch (err) {
     res.status(500).send(err.message);
@@ -130,12 +138,13 @@ app.post("/save-upload", async (req, res) => {
     const newData = req.body;
     await Upload.deleteMany({});
     await Upload.insertMany(newData);
+    io.emit('data-updated', { type: 'upload' }); // Emit real-time update
     res.sendStatus(200);
   } catch (err) {
     res.status(500).send(err.message);
   }
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
