@@ -1,4 +1,9 @@
 // main.js (updated with socket.io client)
+
+/**
+ * Opens the specified tab by adding/removing active classes.
+ * @param {string} tabId - The ID of the tab to open.
+ */
 function openTab(tabId) {
   const tabs = document.querySelectorAll(".tab-content");
   tabs.forEach((tab) => tab.classList.remove("active"));
@@ -10,6 +15,9 @@ function openTab(tabId) {
   if (activeLink) activeLink.classList.add("active");
 }
 
+/**
+ * Toggles dark mode on the body and updates the toggle button text.
+ */
 function toggleDarkMode() {
   document.body.classList.toggle("dark-mode");
   const toggle = document.querySelector(".dark-mode-toggle");
@@ -18,6 +26,10 @@ function toggleDarkMode() {
     : "🌙";
 }
 
+/**
+ * Updates scroll indicators for horizontal scrolling in table wrappers.
+ * @param {Event} event - The scroll event.
+ */
 function updateScrollIndicators(event) {
   const wrapper = event.target;
   const scrollLeft = wrapper.scrollLeft;
@@ -81,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateScrollIndicators({ target: wrapper });
   });
 
-  // Закрытие модальных окон по клику вне
+  // Close modals on click outside
   window.onclick = function(event) {
     const modals = document.getElementsByClassName('modal');
     for (let modal of modals) {

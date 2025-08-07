@@ -2,7 +2,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const path = require("path"); // Для путей
+const path = require("path"); // For paths
 const http = require('http');
 const socketIo = require('socket.io');
 
@@ -13,20 +13,20 @@ const io = socketIo(server);
 const port = 3000;
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, ".."))); // Статические файлы из корня проекта (excel-site)
+app.use(express.static(path.join(__dirname, ".."))); // Static files from project root (excel-site)
 
-// Ваш URI (пароль закодирован)
-let password = "Hoffman1938@"; // Актуальный пароль
+// Your URI (password encoded)
+let password = "Hoffman1938@"; // Actual password
 password = encodeURIComponent(password);
 const mongoURI = `mongodb+srv://giowulaia76:${password}@cluster0croco.3zvffx2.mongodb.net/excel-site-db?retryWrites=true&w=majority`;
 
-// Подключение к MongoDB
+// Connect to MongoDB
 mongoose
   .connect(mongoURI)
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
-// Схемы и модели
+// Schemas and models
 const dataSchema = new mongoose.Schema({
   callDate: String,
   userId: String,
@@ -74,12 +74,12 @@ const uploadSchema = new mongoose.Schema({
 });
 const Upload = mongoose.model("Upload", uploadSchema, "upload");
 
-// Роут для главной страницы
+// Route for main page
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "..", "index.html")); // Путь к index.html в корне
+  res.sendFile(path.join(__dirname, "..", "index.html")); // Path to index.html in root
 });
 
-// Эндпоинты для data
+// Endpoints for data
 app.get("/data", async (req, res) => {
   try {
     const data = await Data.find({ deleted: false });
@@ -101,7 +101,7 @@ app.post("/save", async (req, res) => {
   }
 });
 
-// Эндпоинты для progress
+// Endpoints for progress
 app.get("/progress-data", async (req, res) => {
   try {
     const data = await Progress.find({ deleted: false });
@@ -123,7 +123,7 @@ app.post("/save-progress", async (req, res) => {
   }
 });
 
-// Эндпоинты для upload
+// Endpoints for upload
 app.get("/upload-data", async (req, res) => {
   try {
     const data = await Upload.find({ deleted: false });

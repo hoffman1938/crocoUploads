@@ -8,6 +8,9 @@ let sortDirection = "asc";
 let filterValues = {};
 let selectedIndices = new Set();
 
+/**
+ * Loads data from the server and renders the table.
+ */
 async function loadData() {
   try {
     const response = await fetch("/data");
@@ -19,6 +22,9 @@ async function loadData() {
   }
 }
 
+/**
+ * Creates filter dropdowns based on unique values in data.
+ */
 function createFilters() {
   const columns = ['callDate', 'userId', 'regDate', 'operator', 'contact', 'comment', 'otherNote'];
   const filtersContainer = document.getElementById('filters');
@@ -51,15 +57,27 @@ function createFilters() {
   });
 }
 
+/**
+ * Opens the filters popup and creates filters.
+ * @param {string} modalId - The ID of the modal to open.
+ */
 function openFiltersPopup(modalId) {
   createFilters();
   document.getElementById(modalId).style.display = "block";
 }
 
+/**
+ * Closes the filters popup.
+ * @param {string} modalId - The ID of the modal to close.
+ */
 function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
+/**
+ * Applies filters from the popup and re-renders the table.
+ * @param {string} modalId - The ID of the modal.
+ */
 async function applyFiltersTab1(modalId) {
   const columns = ['callDate', 'userId', 'regDate', 'operator', 'contact', 'comment', 'otherNote'];
   columns.forEach(column => {
@@ -74,6 +92,10 @@ async function applyFiltersTab1(modalId) {
   closeFiltersPopup(modalId);
 }
 
+/**
+ * Sorts the table by the specified column.
+ * @param {string} column - The column to sort by.
+ */
 function sortTable(column) {
   if (sortColumn === column) {
     sortDirection = sortDirection === "asc" ? "desc" : "asc";
@@ -84,6 +106,9 @@ function sortTable(column) {
   renderTable();
 }
 
+/**
+ * Renders the table with filtered, sorted, and paginated data.
+ */
 function renderTable() {
   const tableBody = document.getElementById("tableBody");
   const searchValue = document
@@ -153,22 +178,17 @@ function renderTable() {
 
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
-        const cb = tr.querySelector(".row-select");
         cb.checked = !cb.checked;
         cb.dispatchEvent(new Event("change"));
       }
     });
   });
 
-  renderPagination(totalPages);
-}
-
-function renderPagination(totalPages) {
+  // Pagination
   const pagination = document.getElementById("pagination");
-  pagination.innerHTML = "";
-
+  pagination.innerHTML = `Page ${currentPage + 1} of ${totalPages}`;
   const prevBtn = document.createElement("button");
-  prevBtn.textContent = "წინა";
+  prevBtn.textContent = "Previous";
   prevBtn.disabled = currentPage === 0;
   prevBtn.onclick = () => {
     if (currentPage > 0) {
@@ -176,15 +196,10 @@ function renderPagination(totalPages) {
       renderTable();
     }
   };
-  pagination.appendChild(prevBtn);
-
-  const pageInfo = document.createElement("span");
-  pageInfo.id = "pageInfo";
-  pageInfo.textContent = `გვერდი ${currentPage + 1} / ${totalPages}`;
-  pagination.appendChild(pageInfo);
+  pagination.prepend(prevBtn);
 
   const nextBtn = document.createElement("button");
-  nextBtn.textContent = "შემდეგი";
+  nextBtn.textContent = "Next";
   nextBtn.disabled = currentPage >= totalPages - 1;
   nextBtn.onclick = () => {
     if (currentPage < totalPages - 1) {
@@ -195,6 +210,9 @@ function renderPagination(totalPages) {
   pagination.appendChild(nextBtn);
 }
 
+/**
+ * Saves or updates a row and refreshes the table.
+ */
 async function saveRow() {
   const today = new Date().toISOString().split("T")[0];
   const callDate = document.getElementById("callDate").value;
@@ -229,6 +247,10 @@ async function saveRow() {
   clearInputs();
 }
 
+/**
+ * Deletes a row by marking it as deleted and saves data.
+ * @param {number} index - The index of the row to delete.
+ */
 async function deleteRow(index) {
   if (index >= 0 && index < data.length) {
     data[index].deleted = true;
@@ -239,6 +261,9 @@ async function deleteRow(index) {
   }
 }
 
+/**
+ * Bulk deletes selected rows and saves data.
+ */
 async function bulkDeleteRows() {
   const indices = Array.from(selectedIndices);
   if (indices.length === 0) {
@@ -257,6 +282,10 @@ async function bulkDeleteRows() {
   renderTable();
 }
 
+/**
+ * Populates form inputs with row data for editing.
+ * @param {number} index - The index of the row to edit.
+ */
 function editRow(index) {
   const row = data[index];
   document.getElementById("callDate").value = row.callDate;
@@ -270,6 +299,10 @@ function editRow(index) {
   document.getElementById("saveBtn").textContent = "განახლება";
 }
 
+/**
+ * Handles Excel file upload and imports data.
+ * @param {Event} event - The file input change event.
+ */
 async function handleExcelUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -326,6 +359,9 @@ async function handleExcelUpload(event) {
   reader.readAsBinaryString(file);
 }
 
+/**
+ * Saves data to the server.
+ */
 async function saveData() {
   try {
     await fetch("/save", {
@@ -338,6 +374,9 @@ async function saveData() {
   }
 }
 
+/**
+ * Downloads selected rows as an Excel file.
+ */
 function downloadSelectedTab1() {
   const indices = Array.from(selectedIndices);
   if (indices.length === 0) {

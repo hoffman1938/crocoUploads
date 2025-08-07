@@ -8,6 +8,9 @@ let uploadSortDirection = "asc";
 let uploadFilterValues = {};
 let uploadSelectedIndices = new Set();
 
+/**
+ * Loads upload data from the server and renders the table.
+ */
 async function loadUploadData() {
   try {
     const response = await fetch("/upload-data");
@@ -19,6 +22,9 @@ async function loadUploadData() {
   }
 }
 
+/**
+ * Creates filter dropdowns for upload data.
+ */
 function createUploadFilters() {
   const columns = ['currentDate', 'operator', 'type', 'userId', 'uploadTime', 'actionValidity', 'completionValidity'];
   const filtersContainer = document.getElementById('uploadFilters');
@@ -64,15 +70,27 @@ function createUploadFilters() {
   });
 }
 
+/**
+ * Opens the filters popup for the upload tab.
+ * @param {string} modalId - The ID of the modal.
+ */
 function openFiltersPopup(modalId) {
   createUploadFilters();
   document.getElementById(modalId).style.display = "block";
 }
 
+/**
+ * Closes the filters popup.
+ * @param {string} modalId - The ID of the modal.
+ */
 function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
+/**
+ * Applies filters for the upload tab and re-renders the table.
+ * @param {string} modalId - The ID of the modal.
+ */
 async function applyFiltersTab3(modalId) {
   await loadUploadData();
   uploadCurrentPage = 0;
@@ -80,6 +98,10 @@ async function applyFiltersTab3(modalId) {
   closeFiltersPopup(modalId);
 }
 
+/**
+ * Sorts the upload table by the specified column.
+ * @param {string} column - The column to sort by.
+ */
 function sortUploadTable(column) {
   if (uploadSortColumn === column) {
     uploadSortDirection = uploadSortDirection === "asc" ? "desc" : "asc";
@@ -90,6 +112,12 @@ function sortUploadTable(column) {
   renderUploadTable();
 }
 
+/**
+ * Gets a sortable value for upload data.
+ * @param {object} row - The row data.
+ * @param {string} column - The column name.
+ * @returns {any} - The sortable value.
+ */
 function getUploadSortValue(row, column) {
   let val;
   switch (column) {
@@ -114,6 +142,9 @@ function getUploadSortValue(row, column) {
   return val;
 }
 
+/**
+ * Renders the upload table with filtered, sorted, and paginated data.
+ */
 function renderUploadTable() {
   const tableBody = document.getElementById("uploadTableBody");
   const searchValue = document
@@ -159,8 +190,6 @@ function renderUploadTable() {
   tableBody.innerHTML = "";
   pageData.forEach((row) => {
     const originalIndex = uploadData.indexOf(row);
-    const actionValidity = `${row.day} ${row.month} ${row.year}`;
-    const completionValidity = `${row.day}/${row.month}/${row.year}`;
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td><input type="checkbox" class="upload-row-select" data-index="${originalIndex}"></td>
@@ -168,8 +197,8 @@ function renderUploadTable() {
       <td>${row.operator}</td>
       <td>${row.type}</td>
       <td>${row.userId}</td>
-      <td>${actionValidity}</td>
-      <td>${completionValidity}</td>
+      <td>${row.day} ${row.month} ${row.year}</td>
+      <td>${row.day}/${row.month}/${row.year}</td>
       <td>${row.uploadTime}</td>
       <td>
         <button class="edit-btn" onclick="editUploadRow(${originalIndex})">რედაქტირება</button>
@@ -191,22 +220,17 @@ function renderUploadTable() {
 
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
-        const cb = tr.querySelector(".upload-row-select");
         cb.checked = !cb.checked;
         cb.dispatchEvent(new Event("change"));
       }
     });
   });
 
-  renderUploadPagination(totalPages);
-}
-
-function renderUploadPagination(totalPages) {
+  // Pagination
   const pagination = document.getElementById("uploadPagination");
-  pagination.innerHTML = "";
-
+  pagination.innerHTML = `Page ${uploadCurrentPage + 1} of ${totalPages}`;
   const prevBtn = document.createElement("button");
-  prevBtn.textContent = "წინა";
+  prevBtn.textContent = "Previous";
   prevBtn.disabled = uploadCurrentPage === 0;
   prevBtn.onclick = () => {
     if (uploadCurrentPage > 0) {
@@ -214,15 +238,10 @@ function renderUploadPagination(totalPages) {
       renderUploadTable();
     }
   };
-  pagination.appendChild(prevBtn);
-
-  const pageInfo = document.createElement("span");
-  pageInfo.id = "uploadPageInfo";
-  pageInfo.textContent = `გვერდი ${uploadCurrentPage + 1} / ${totalPages}`;
-  pagination.appendChild(pageInfo);
+  pagination.prepend(prevBtn);
 
   const nextBtn = document.createElement("button");
-  nextBtn.textContent = "შემდეგი";
+  nextBtn.textContent = "Next";
   nextBtn.disabled = uploadCurrentPage >= totalPages - 1;
   nextBtn.onclick = () => {
     if (uploadCurrentPage < totalPages - 1) {
@@ -233,6 +252,9 @@ function renderUploadPagination(totalPages) {
   pagination.appendChild(nextBtn);
 }
 
+/**
+ * Saves or updates an upload row and refreshes the table.
+ */
 async function saveUploadRow() {
   const today = new Date().toISOString().split("T")[0];
   const newRow = {
@@ -260,6 +282,10 @@ async function saveUploadRow() {
   clearUploadInputs();
 }
 
+/**
+ * Populates form inputs for editing an upload row.
+ * @param {number} index - The index of the row.
+ */
 function editUploadRow(index) {
   const row = uploadData[index];
   document.getElementById("uploadOperator").value = row.operator;
@@ -273,6 +299,10 @@ function editUploadRow(index) {
   document.getElementById("uploadSaveBtn").textContent = "განახლება";
 }
 
+/**
+ * Deletes an upload row by marking it as deleted.
+ * @param {number} index - The index of the row.
+ */
 async function deleteUploadRow(index) {
   if (index >= 0 && index < uploadData.length) {
     uploadData[index].deleted = true;
@@ -282,6 +312,9 @@ async function deleteUploadRow(index) {
   }
 }
 
+/**
+ * Bulk deletes selected upload rows.
+ */
 async function uploadBulkDeleteRows() {
   const indices = Array.from(uploadSelectedIndices);
   if (indices.length === 0) {
@@ -299,6 +332,9 @@ async function uploadBulkDeleteRows() {
   await loadUploadData();
 }
 
+/**
+ * Saves upload data to the server.
+ */
 async function saveUploadData() {
   try {
     await fetch("/save-upload", {
@@ -311,6 +347,10 @@ async function saveUploadData() {
   }
 }
 
+/**
+ * Handles Excel upload for upload tab.
+ * @param {Event} event - The file input event.
+ */
 async function handleUploadExcelUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -376,6 +416,9 @@ async function handleUploadExcelUpload(event) {
   reader.readAsBinaryString(file);
 }
 
+/**
+ * Downloads selected upload rows as Excel.
+ */
 function downloadSelectedTab3() {
   const indices = Array.from(uploadSelectedIndices);
   if (indices.length === 0) {

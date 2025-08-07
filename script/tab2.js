@@ -8,6 +8,9 @@ let progressSortDirection = "asc";
 let progressFilterValues = {};
 let progressSelectedIndices = new Set();
 
+/**
+ * Loads progress data from the server, calculates repeats, and renders the table.
+ */
 async function loadProgressData() {
   try {
     const response = await fetch("/progress-data");
@@ -20,6 +23,9 @@ async function loadProgressData() {
   }
 }
 
+/**
+ * Creates filter dropdowns for progress data.
+ */
 function createProgressFilters() {
   const columns = ['date', 'hour', 'source', 'operator', 'userId', 'contact', 'result', 'nextCall', 'note', 'repeat', 'operator2', 'contact2', 'result2', 'comment', 'verified', 'category'];
   const filtersContainer = document.getElementById('progressFilters');
@@ -52,15 +58,27 @@ function createProgressFilters() {
   });
 }
 
+/**
+ * Opens the filters popup for the progress tab.
+ * @param {string} modalId - The ID of the modal.
+ */
 function openFiltersPopup(modalId) {
   createProgressFilters();
   document.getElementById(modalId).style.display = "block";
 }
 
+/**
+ * Closes the filters popup.
+ * @param {string} modalId - The ID of the modal.
+ */
 function closeFiltersPopup(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
 
+/**
+ * Applies filters for the progress tab and re-renders the table.
+ * @param {string} modalId - The ID of the modal.
+ */
 async function applyFiltersTab2(modalId) {
   await loadProgressData();
   progressCurrentPage = 0;
@@ -68,6 +86,10 @@ async function applyFiltersTab2(modalId) {
   closeFiltersPopup(modalId);
 }
 
+/**
+ * Sorts the progress table by the specified column.
+ * @param {string} column - The column to sort by.
+ */
 function sortProgressTable(column) {
   if (progressSortColumn === column) {
     progressSortDirection = progressSortDirection === "asc" ? "desc" : "asc";
@@ -78,6 +100,9 @@ function sortProgressTable(column) {
   renderProgressTable();
 }
 
+/**
+ * Renders the progress table with filtered, sorted, and paginated data.
+ */
 function renderProgressTable() {
   const tableBody = document.getElementById("progressTableBody");
   const searchValue = document
@@ -161,22 +186,17 @@ function renderProgressTable() {
 
     tr.addEventListener("click", (e) => {
       if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
-        const cb = tr.querySelector(".progress-row-select");
         cb.checked = !cb.checked;
         cb.dispatchEvent(new Event("change"));
       }
     });
   });
 
-  renderProgressPagination(totalPages);
-}
-
-function renderProgressPagination(totalPages) {
+  // Pagination
   const pagination = document.getElementById("progressPagination");
-  pagination.innerHTML = "";
-
+  pagination.innerHTML = `Page ${progressCurrentPage + 1} of ${totalPages}`;
   const prevBtn = document.createElement("button");
-  prevBtn.textContent = "წინა";
+  prevBtn.textContent = "Previous";
   prevBtn.disabled = progressCurrentPage === 0;
   prevBtn.onclick = () => {
     if (progressCurrentPage > 0) {
@@ -184,15 +204,10 @@ function renderProgressPagination(totalPages) {
       renderProgressTable();
     }
   };
-  pagination.appendChild(prevBtn);
-
-  const pageInfo = document.createElement("span");
-  pageInfo.id = "progressPageInfo";
-  pageInfo.textContent = `გვერდი ${progressCurrentPage + 1} / ${totalPages}`;
-  pagination.appendChild(pageInfo);
+  pagination.prepend(prevBtn);
 
   const nextBtn = document.createElement("button");
-  nextBtn.textContent = "შემდეგი";
+  nextBtn.textContent = "Next";
   nextBtn.disabled = progressCurrentPage >= totalPages - 1;
   nextBtn.onclick = () => {
     if (progressCurrentPage < totalPages - 1) {
@@ -203,75 +218,43 @@ function renderProgressPagination(totalPages) {
   pagination.appendChild(nextBtn);
 }
 
+/**
+ * Calculates repeat counts for progress data.
+ */
 function calculateRepeats() {
-  const sorted = progressData
-    .filter((r) => !r.deleted)
-    .sort((a, b) => parseDateTime(a) - parseDateTime(b));
-
-  for (let i = 0; i < sorted.length; i++) {
-    const row = sorted[i];
-    const result = row.result.trim();
-    const contact = row.contact.trim();
-    const dateStr = row.date;
-    const timeStr = row.hour || "09:00";
-    const currentDate = new Date(dateStr);
-    const tomorrow = new Date(currentDate);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split("T")[0] + " " + timeStr;
-    if (result === "") {
-      row.repeat = "";
-      continue;
+  const userCounts = {};
+  progressData.forEach((row) => {
+    if (!row.deleted) {
+      userCounts[row.userId] = (userCounts[row.userId] || 0) + 1;
     }
-    if (
-      ["სხვისი ნომერი", "არ სურს ", "ვერ", "შედგა კომუნიკაცია", "Res"].includes(
-        result
-      ) ||
-      contact === "ვერ"
-    ) {
-      row.repeat = "აღარ";
-      continue;
-    }
-
-    if (["გათიშულია", "არპასუხი", "სხვა დროს დარეკვა"].includes(result)) {
-      const currentFraction = timeToFraction(timeStr);
-      const z2 = 0.041666; // 1 hour
-      let newFraction = currentFraction + z2;
-      let newDate = new Date(currentDate);
-      if (newFraction >= 1) {
-        newFraction -= 1;
-        newDate.setDate(newDate.getDate() + 1);
-      }
-      const newTime = fractionToTime(newFraction);
-      row.repeat = newDate.toISOString().split("T")[0] + " " + newTime;
-      continue;
-    }
-    row.repeat = tomorrowStr;
-  }
+  });
+  progressData.forEach((row) => {
+    row.count = userCounts[row.userId] || 0;
+  });
 }
 
+/**
+ * Saves or updates a progress row and refreshes the table.
+ */
 async function saveProgressRow() {
-  const userId = document.getElementById("progressUserId").value;
-  const found = data.find((r) => r.userId === userId && !r.deleted);
-  const verified = found ? found.contact : "არა";
-
   const newRow = {
     date: document.getElementById("progressDate").value,
     hour: document.getElementById("progressHour").value,
     source: document.getElementById("progressSource").value,
     operator: document.getElementById("progressOperator").value,
-    userId: userId,
+    userId: document.getElementById("progressUserId").value,
     contact: document.getElementById("progressContact").value,
     result: document.getElementById("progressResult").value,
     nextCall: document.getElementById("progressNextCall").value,
     note: document.getElementById("progressNote").value,
-    repeat: "",
+    repeat: "", // Calculated later
     operator2: document.getElementById("progressOperator2").value,
     contact2: document.getElementById("progressContact2").value,
     result2: document.getElementById("progressResult2").value,
     comment: document.getElementById("progressComment").value,
-    verified: verified,
+    verified: document.getElementById("progressVerified").value,
     category: document.getElementById("progressCategory").value,
-    count: 0,
+    count: 0, // Calculated later
     deleted: false,
   };
 
@@ -288,6 +271,10 @@ async function saveProgressRow() {
   clearProgressInputs();
 }
 
+/**
+ * Populates form inputs for editing a progress row.
+ * @param {number} index - The index of the row.
+ */
 function editProgressRow(index) {
   const row = progressData[index];
   document.getElementById("progressDate").value = row.date;
@@ -309,6 +296,10 @@ function editProgressRow(index) {
   document.getElementById("progressSaveBtn").textContent = "განახლება";
 }
 
+/**
+ * Deletes a progress row by marking it as deleted.
+ * @param {number} index - The index of the row.
+ */
 async function deleteProgressRow(index) {
   if (index >= 0 && index < progressData.length) {
     progressData[index].deleted = true;
@@ -318,6 +309,9 @@ async function deleteProgressRow(index) {
   }
 }
 
+/**
+ * Bulk deletes selected progress rows.
+ */
 async function progressBulkDeleteRows() {
   const indices = Array.from(progressSelectedIndices);
   if (indices.length === 0) {
@@ -335,6 +329,9 @@ async function progressBulkDeleteRows() {
   await loadProgressData();
 }
 
+/**
+ * Saves progress data to the server.
+ */
 async function saveProgressData() {
   try {
     await fetch("/save-progress", {
@@ -347,6 +344,10 @@ async function saveProgressData() {
   }
 }
 
+/**
+ * Handles Excel upload for progress tab.
+ * @param {Event} event - The file input event.
+ */
 async function handleProgressExcelUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -413,6 +414,9 @@ async function handleProgressExcelUpload(event) {
   reader.readAsBinaryString(file);
 }
 
+/**
+ * Downloads selected progress rows as Excel.
+ */
 function downloadSelectedTab2() {
   const indices = Array.from(progressSelectedIndices);
   if (indices.length === 0) {
