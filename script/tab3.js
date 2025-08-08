@@ -1,0 +1,438 @@
+// tab3.js (updated with persistent selections)
+let uploadData = [];
+let uploadCurrentPage = 0;
+let uploadEditIndex = -1;
+const uploadItemsPerPage = 25;
+let uploadSortColumn = null;
+let uploadSortDirection = "asc";
+let uploadFilterValues = {};
+let uploadSelectedIndices = new Set();
+
+/**
+ * Loads upload data from the server and renders the table.
+ */
+async function loadUploadData() {
+  try {
+    const response = await fetch("/upload-data");
+    uploadData = await response.json();
+    createUploadFilters();
+    renderUploadTable();
+  } catch (error) {
+    console.error("Error loading upload data:", error);
+  }
+}
+
+/**
+ * Creates filter dropdowns for upload data.
+ */
+function createUploadFilters() {
+  const columns = ['currentDate', 'operator', 'type', 'userId', 'uploadTime', 'actionValidity', 'completionValidity'];
+  const filtersContainer = document.getElementById('uploadFilters');
+  filtersContainer.innerHTML = '';
+
+  let tempFilteredData = uploadData.filter((row) => !row.deleted);
+  Object.keys(uploadFilterValues).forEach(col => {
+    if (uploadFilterValues[col]) {
+      if (col === 'actionValidity') {
+        tempFilteredData = tempFilteredData.filter(row => `${row.day} ${row.month} ${row.year}` === uploadFilterValues[col]);
+      } else if (col === 'completionValidity') {
+        tempFilteredData = tempFilteredData.filter(row => `${row.day}/${row.month}/${row.year}` === uploadFilterValues[col]);
+      } else {
+        tempFilteredData = tempFilteredData.filter(row => String(row[col]) === uploadFilterValues[col]);
+      }
+    }
+  });
+
+  columns.forEach(column => {
+    let uniqueValues;
+    if (column === 'actionValidity') {
+      uniqueValues = [...new Set(tempFilteredData.map(row => `${row.day} ${row.month} ${row.year}` || ''))].sort();
+    } else if (column === 'completionValidity') {
+      uniqueValues = [...new Set(tempFilteredData.map(row => `${row.day}/${row.month}/${row.year}` || ''))].sort();
+    } else {
+      uniqueValues = [...new Set(tempFilteredData.map(row => String(row[column]) || ''))].sort();
+    }
+    if (uploadFilterValues[column] && !uniqueValues.includes(uploadFilterValues[column])) {
+      uploadFilterValues[column] = '';
+    }
+    const label = document.createElement('label');
+    label.textContent = `${column}: `;
+    const select = document.createElement('select');
+    select.id = `upload-filter-${column}`;
+    select.innerHTML = '<option value="">ყველა</option>' + uniqueValues.map(val => `<option value="${val}">${val}</option>`).join('');
+    select.value = uploadFilterValues[column] || '';
+    select.addEventListener('change', (e) => {
+      uploadFilterValues[column] = e.target.value;
+      createUploadFilters();
+    });
+    label.appendChild(select);
+    filtersContainer.appendChild(label);
+  });
+}
+
+/**
+ * Opens the filters popup for the upload tab.
+ * @param {string} modalId - The ID of the modal.
+ */
+function openFiltersPopup(modalId) {
+  createUploadFilters();
+  document.getElementById(modalId).style.display = "block";
+}
+
+/**
+ * Closes the filters popup.
+ * @param {string} modalId - The ID of the modal.
+ */
+function closeFiltersPopup(modalId) {
+  document.getElementById(modalId).style.display = "none";
+}
+
+/**
+ * Applies filters for the upload tab and re-renders the table.
+ * @param {string} modalId - The ID of the modal.
+ */
+async function applyFiltersTab3(modalId) {
+  await loadUploadData();
+  uploadCurrentPage = 0;
+  renderUploadTable();
+  closeFiltersPopup(modalId);
+}
+
+/**
+ * Sorts the upload table by the specified column.
+ * @param {string} column - The column to sort by.
+ */
+function sortUploadTable(column) {
+  if (uploadSortColumn === column) {
+    uploadSortDirection = uploadSortDirection === "asc" ? "desc" : "asc";
+  } else {
+    uploadSortColumn = column;
+    uploadSortDirection = "asc";
+  }
+  renderUploadTable();
+}
+
+/**
+ * Gets a sortable value for upload data.
+ * @param {object} row - The row data.
+ * @param {string} column - The column name.
+ * @returns {any} - The sortable value.
+ */
+function getUploadSortValue(row, column) {
+  let val;
+  switch (column) {
+    case "currentDate":
+      val = new Date(row.currentDate).getTime() || 0;
+      break;
+    case "operator":
+    case "type":
+    case "userId":
+    case "uploadTime":
+      val = row[column] ? row[column].toLowerCase() : "";
+      break;
+    case "actionValidity":
+      val = new Date(row.year, row.month - 1, row.day).getTime() || 0;
+      break;
+    case "completionValidity":
+      val = new Date(row.year, row.month - 1, row.day).getTime() || 0;
+      break;
+    default:
+      val = row[column];
+  }
+  return val;
+}
+
+/**
+ * Renders the upload table with filtered, sorted, and paginated data.
+ */
+function renderUploadTable() {
+  const tableBody = document.getElementById("uploadTableBody");
+  const searchValue = document
+    .getElementById("uploadSearchInput")
+    .value.toLowerCase();
+  let filteredData = uploadData.filter((row) => !row.deleted);
+
+  Object.keys(uploadFilterValues).forEach(column => {
+    if (uploadFilterValues[column]) {
+      if (column === 'actionValidity') {
+        filteredData = filteredData.filter(row => `${row.day} ${row.month} ${row.year}` === uploadFilterValues[column]);
+      } else if (column === 'completionValidity') {
+        filteredData = filteredData.filter(row => `${row.day}/${row.month}/${row.year}` === uploadFilterValues[column]);
+      } else {
+        filteredData = filteredData.filter(row => String(row[column]) === uploadFilterValues[column]);
+      }
+    }
+  });
+
+  if (searchValue) {
+    filteredData = filteredData.filter((row) =>
+      Object.values(row).some((val) =>
+        val.toString().toLowerCase().includes(searchValue)
+      )
+    );
+  }
+
+  if (uploadSortColumn) {
+    filteredData.sort((a, b) => {
+      const va = getUploadSortValue(a, uploadSortColumn);
+      const vb = getUploadSortValue(b, uploadSortColumn);
+      if (va < vb) return uploadSortDirection === "asc" ? -1 : 1;
+      if (va > vb) return uploadSortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+  }
+
+  const totalPages = Math.ceil(filteredData.length / uploadItemsPerPage);
+  const start = uploadCurrentPage * uploadItemsPerPage;
+  const end = start + uploadItemsPerPage;
+  const pageData = filteredData.slice(start, end);
+
+  tableBody.innerHTML = "";
+  pageData.forEach((row) => {
+    const originalIndex = uploadData.indexOf(row);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><input type="checkbox" class="upload-row-select" data-index="${originalIndex}"></td>
+      <td>${row.currentDate}</td>
+      <td>${row.operator}</td>
+      <td>${row.type}</td>
+      <td>${row.userId}</td>
+      <td>${row.day} ${row.month} ${row.year}</td>
+      <td>${row.day}/${row.month}/${row.year}</td>
+      <td>${row.uploadTime}</td>
+      <td>
+        <button class="edit-btn" onclick="editUploadRow(${originalIndex})">რედაქტირება</button>
+        <button class="delete-btn" onclick="deleteUploadRow(${originalIndex})">წაშლა</button>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+
+    const cb = tr.querySelector(".upload-row-select");
+    cb.checked = uploadSelectedIndices.has(originalIndex);
+    cb.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.index);
+      if (e.target.checked) {
+        uploadSelectedIndices.add(idx);
+      } else {
+        uploadSelectedIndices.delete(idx);
+      }
+    });
+
+    tr.addEventListener("click", (e) => {
+      if (!["INPUT", "BUTTON"].includes(e.target.tagName)) {
+        cb.checked = !cb.checked;
+        cb.dispatchEvent(new Event("change"));
+      }
+    });
+  });
+
+  // Pagination
+  const pagination = document.getElementById("uploadPagination");
+  pagination.innerHTML = `Page ${uploadCurrentPage + 1} of ${totalPages}`;
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "Previous";
+  prevBtn.disabled = uploadCurrentPage === 0;
+  prevBtn.onclick = () => {
+    if (uploadCurrentPage > 0) {
+      uploadCurrentPage--;
+      renderUploadTable();
+    }
+  };
+  pagination.prepend(prevBtn);
+
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "Next";
+  nextBtn.disabled = uploadCurrentPage >= totalPages - 1;
+  nextBtn.onclick = () => {
+    if (uploadCurrentPage < totalPages - 1) {
+      uploadCurrentPage++;
+      renderUploadTable();
+    }
+  };
+  pagination.appendChild(nextBtn);
+}
+
+/**
+ * Saves or updates an upload row and refreshes the table.
+ */
+async function saveUploadRow() {
+  const today = new Date().toISOString().split("T")[0];
+  const newRow = {
+    currentDate: today,
+    operator: document.getElementById("uploadOperator").value,
+    type: document.getElementById("uploadType").value,
+    userId: document.getElementById("uploadUserId").value,
+    day: document.getElementById("uploadDay").value,
+    month: document.getElementById("uploadMonth").value,
+    year: document.getElementById("uploadYear").value,
+    uploadTime: document.getElementById("uploadTime").value,
+    deleted: false,
+  };
+
+  if (uploadEditIndex !== -1) {
+    uploadData[uploadEditIndex] = newRow;
+    uploadEditIndex = -1;
+    document.getElementById("uploadSaveBtn").textContent = "შენახვა";
+  } else {
+    uploadData.unshift(newRow);
+  }
+
+  await saveUploadData();
+  await loadUploadData();
+  clearUploadInputs();
+}
+
+/**
+ * Populates form inputs for editing an upload row.
+ * @param {number} index - The index of the row.
+ */
+function editUploadRow(index) {
+  const row = uploadData[index];
+  document.getElementById("uploadOperator").value = row.operator;
+  document.getElementById("uploadType").value = row.type;
+  document.getElementById("uploadUserId").value = row.userId;
+  document.getElementById("uploadDay").value = row.day;
+  document.getElementById("uploadMonth").value = row.month;
+  document.getElementById("uploadYear").value = row.year;
+  document.getElementById("uploadTime").value = row.uploadTime;
+  uploadEditIndex = index;
+  document.getElementById("uploadSaveBtn").textContent = "განახლება";
+}
+
+/**
+ * Deletes an upload row by marking it as deleted.
+ * @param {number} index - The index of the row.
+ */
+async function deleteUploadRow(index) {
+  if (index >= 0 && index < uploadData.length) {
+    uploadData[index].deleted = true;
+    uploadSelectedIndices.delete(index);
+    await saveUploadData();
+    await loadUploadData();
+  }
+}
+
+/**
+ * Bulk deletes selected upload rows.
+ */
+async function uploadBulkDeleteRows() {
+  const indices = Array.from(uploadSelectedIndices);
+  if (indices.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
+  indices.sort((a, b) => b - a);
+  indices.forEach((idx) => {
+    if (idx >= 0 && idx < uploadData.length) {
+      uploadData[idx].deleted = true;
+    }
+  });
+  await saveUploadData();
+  uploadSelectedIndices.clear();
+  await loadUploadData();
+}
+
+/**
+ * Saves upload data to the server.
+ */
+async function saveUploadData() {
+  try {
+    await fetch("/save-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(uploadData),
+    });
+  } catch (error) {
+    console.error("Error saving upload data:", error);
+  }
+}
+
+/**
+ * Handles Excel upload for upload tab.
+ * @param {Event} event - The file input event.
+ */
+async function handleUploadExcelUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const workbook = XLSX.read(e.target.result, { type: "binary" });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const excelData = XLSX.utils.sheet_to_json(sheet, {
+      header: [
+        null,
+        "operator",
+        "type",
+        "userId",
+        "day",
+        "month",
+        "year",
+        null,
+        "uploadTime",
+        null,
+        null,
+        null,
+        null,
+      ],
+      defval: "",
+    });
+
+    const today = new Date().toISOString().split("T")[0];
+    const currentTime = new Date().toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    excelData.forEach((row) => {
+      if (
+        !row.operator &&
+        !row.type &&
+        !row.userId &&
+        !row.day &&
+        !row.month &&
+        !row.year &&
+        !row.uploadTime
+      )
+        return;
+      const newRow = { deleted: false, currentDate: today };
+      newRow.operator = row.operator;
+      newRow.type = row.type;
+      newRow.userId = (row.userId || "").toString();
+      newRow.day = (row.day || "").toString();
+      newRow.month = (row.month || "").toString();
+      newRow.year = (row.year || "").toString();
+      newRow.uploadTime =
+        typeof row.uploadTime === "number" && row.uploadTime < 1
+          ? excelSerialToTime(row.uploadTime)
+          : row.uploadTime || currentTime;
+      uploadData.unshift(newRow);
+    });
+
+    await saveUploadData();
+    await loadUploadData();
+  };
+  reader.readAsBinaryString(file);
+}
+
+/**
+ * Downloads selected upload rows as Excel.
+ */
+function downloadSelectedTab3() {
+  const indices = Array.from(uploadSelectedIndices);
+  if (indices.length === 0) {
+    alert("გთხოვთ აირჩიოთ მინიმუმ ერთი ჩანაწერი.");
+    return;
+  }
+
+  indices.sort((a, b) => a - b); // Sort by original index for consistent order
+  const selectedData = indices.map(idx => uploadData[idx]);
+
+  const headers = ["დღევანდელი თარიღი", "ოპერატორი", "ტიპი", "მომხმარებლის ID", "მოქმედების ვადა", "დასრულების ვადა", "ატვირთვის დრო"];
+  const ws_data = [headers, ...selectedData.map(row => [row.currentDate, row.operator, row.type, row.userId, `${row.day} ${row.month} ${row.year}`, `${row.day}/${row.month}/${row.year}`, row.uploadTime])];
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Upload");
+  XLSX.writeFile(wb, "selected_upload.xlsx");
+}
